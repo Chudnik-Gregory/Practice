@@ -34,7 +34,7 @@ namespace Services.DataAccess
                     return await extractSearchB.Request(wait, randomMin, randomMax);
                 });
 
-                var thirdTask = Task.Factory.StartNew(async () =>
+                Task<(Status statusC,Status statusD)> thirdTask = Task.Run(async () =>
                 {
                     var statusC = await extractSearchC.Request(wait, randomMin, randomMax);
                     if (statusC == Status.OK)
@@ -46,11 +46,13 @@ namespace Services.DataAccess
                 });
 
                 await Task.WhenAll(firstTask, secondTask, thirdTask);
+
                 searchModels.Add(new ExtractSearchModel(extractSearchA, firstTask.Result));
                 searchModels.Add(new ExtractSearchModel(extractSearchB, secondTask.Result));
-                searchModels.Add(new ExtractSearchModel(extractSearchC, thirdTask.Result.Result.statusC));
-                if (thirdTask.Result.Result.statusC == Status.OK)
-                    searchModels.Add(new ExtractSearchModel(extractSearchD, thirdTask.Result.Result.statusD));
+                searchModels.Add(new ExtractSearchModel(extractSearchC, thirdTask.Result.statusC));
+
+                if (thirdTask.Result.statusC == Status.OK)
+                    searchModels.Add(new ExtractSearchModel(extractSearchD, thirdTask.Result.statusD));
             }
             catch (Exception ex)
             {

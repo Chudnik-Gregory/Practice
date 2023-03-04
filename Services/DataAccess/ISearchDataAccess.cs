@@ -6,7 +6,7 @@ namespace Services.DataAccess
 {
     public interface ISearchDataAccess
     {
-        Task SetExtractSearches(int wait = 50, int randomMin = 50, int randomMax = 5000);
+        Task SetExtractSearches(int wait, int randomMin, int randomMax);
         Task<IEnumerable<ExtractSearchModel>> GetExtractSearches();
     }
 }
