@@ -13,19 +13,17 @@ namespace Services.Handlers
 {
     public class GetExtractSearchHandler : IRequestHandler<GetExtractSearchQuery, IEnumerable<ExtractSearchModel>>
     {
-        private readonly ISearchDataAccess searchDataAccess;
+        private readonly ISearchDataAccess _searchDataAccess;
 
         public GetExtractSearchHandler(ISearchDataAccess searchDataAccess)
         {
-            this.searchDataAccess = searchDataAccess;
+            _searchDataAccess = searchDataAccess;
         }
 
-        public Task<IEnumerable<ExtractSearchModel>> Handle(GetExtractSearchQuery request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ExtractSearchModel>> Handle(GetExtractSearchQuery request, CancellationToken cancellationToken)
         {
-            searchDataAccess.SetExtractSearches(request.Wait, request.Min, request.Max);
-            //InvalidOperationException: Collection was modified; enumeration operation may not execute.
-            //Если метод GetExtractSearches возвращает List
-            return Task.FromResult(searchDataAccess.GetExtractSearches());
+            await _searchDataAccess.SetExtractSearches(request.Wait, request.Min, request.Max);
+            return await _searchDataAccess.GetExtractSearches();
         }
     }
 }

@@ -10,16 +10,20 @@ namespace Practice.Controllers
 {
     public class SearchController : BaseController
     {
-        private readonly IMediator mediator;
+        private readonly IMediator _mediator;
         public SearchController(IMediator mediator)
         {
-            this.mediator = mediator;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<IEnumerable<ExtractSearchModel>> GetSearch([FromQuery] int wait, [FromQuery] int randomMin, [FromQuery] int randomMax)
+        public async Task<IEnumerable<ExtractSearchModel>> GetSearch(
+            [FromQuery] int wait, 
+            [FromQuery] int randomMin,
+            [FromQuery] int randomMax)
         {
-            return await mediator.Send(new GetExtractSearchQuery(wait, randomMin, randomMax));
+            var result  = await _mediator.Send(new GetExtractSearchQuery(wait, randomMin, randomMax));
+            return result;
         }
     }
 }
