@@ -1,20 +1,19 @@
 ﻿using Services.Model;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Services.DataAccess
 {
-    // Время обработки Request запроса не больше wait + 80мс 
-    // Если больше, тогда TimeOut
-    // Если C вернулась успешной, тогда вызываем D
     public class SearchDataAccess : ISearchDataAccess
     {
         private List<ExtractSearchModel> searchModels = new List<ExtractSearchModel>();
 
-        public void SetExtractSearches(int wait, int randomMin, int randomMax)
+        public async Task SetExtractSearches(int wait, int randomMin, int randomMax)
         {
             searchModels = new List<ExtractSearchModel>();
 
@@ -25,34 +24,33 @@ namespace Services.DataAccess
                 var extractSearchC = new ExtractSearchC();
                 var extractSearchD = new ExtractSearchD();
 
-                var firstTask = Task.Factory.StartNew<Status>(() =>
+                var firstTask = Task.Run(async () =>
                 {
-                    return extractSearchA.Request(wait, randomMin, randomMax);
+                    return await extractSearchA.Request(wait, randomMin, randomMax);
                 });
 
-                var secondTask = Task.Factory.StartNew(() =>
+                var secondTask = Task.Run(async () =>
                 {
-                    return extractSearchB.Request(wait, randomMin, randomMax);
+                    return await extractSearchB.Request(wait, randomMin, randomMax);
                 });
 
-                var thirdTask = Task.Factory.StartNew(() =>
+                var thirdTask = Task.Factory.StartNew(async () =>
                 {
-                    var statusC = extractSearchC.Request(wait, randomMin, randomMax);
+                    var statusC = await extractSearchC.Request(wait, randomMin, randomMax);
                     if (statusC == Status.OK)
                     {
-                        var statusD = extractSearchD.Request(wait, randomMin, randomMax);
+                        var statusD = await extractSearchD.Request(wait, randomMin, randomMax);
                         return (statusC: statusC, statusD: statusD);
                     }
                     return (statusC: statusC, statusD: Status.TimeOut);
-
-
                 });
-                Task.WaitAll(firstTask, secondTask, thirdTask);
+
+                await Task.WhenAll(firstTask, secondTask, thirdTask);
                 searchModels.Add(new ExtractSearchModel(extractSearchA, firstTask.Result));
                 searchModels.Add(new ExtractSearchModel(extractSearchB, secondTask.Result));
-                searchModels.Add(new ExtractSearchModel(extractSearchC, thirdTask.Result.statusC));
-                if (thirdTask.Result.statusC == Status.OK)
-                    searchModels.Add(new ExtractSearchModel(extractSearchD, thirdTask.Result.statusD));
+                searchModels.Add(new ExtractSearchModel(extractSearchC, thirdTask.Result.Result.statusC));
+                if (thirdTask.Result.Result.statusC == Status.OK)
+                    searchModels.Add(new ExtractSearchModel(extractSearchD, thirdTask.Result.Result.statusD));
             }
             catch (Exception ex)
             {
@@ -60,9 +58,9 @@ namespace Services.DataAccess
             }
         }
 
-        public IEnumerable<ExtractSearchModel> GetExtractSearches()
+        public Task<IEnumerable<ExtractSearchModel>> GetExtractSearches()
         {
-            return searchModels;
+            return Task.FromResult(searchModels.AsEnumerable());
         }
     }
 }

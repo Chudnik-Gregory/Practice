@@ -9,7 +9,6 @@ namespace Services.Queries.GetRequests
 {
     public class GetExtractSearchQuery : IRequest<IEnumerable<ExtractSearchModel>>
     {
-        //Неужели нужно так?
         public GetExtractSearchQuery(int wait, int min, int max)
         {
             Wait = wait;

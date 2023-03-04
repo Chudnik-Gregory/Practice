@@ -24,7 +24,7 @@ namespace Services
             }
         }
 
-        public Status Request(int wait, int randomMin, int randomMax)
+        public async Task<Status> Request(int wait, int randomMin, int randomMax)
         {
             if (randomMin <= 0)
                 throw new ArgumentOutOfRangeException("Число не может быть отрицательным или равняться нулю, повторите запрос!", nameof(randomMin));
@@ -33,14 +33,14 @@ namespace Services
             if (randomMin > randomMax)
                 throw new ArgumentException("Минимальное значение не должно превышать максимальное");
 
-            CancellationTokenSource CancellationTokenSource = new CancellationTokenSource(wait);
+            CancellationTokenSource CancellationTokenSource = new CancellationTokenSource(wait + 80);
             CancellationToken cancellationToken = CancellationTokenSource.Token;
 
-            Task.Run(() =>
+            await Task.Run(async () =>
             {
-                workTime = Search(randomMin, randomMax);
+                workTime = await Search(randomMin, randomMax);
             }, cancellationToken);
-            
+
             if (CancellationTokenSource.IsCancellationRequested)
                 return Status.TimeOut;
 
@@ -54,10 +54,11 @@ namespace Services
             return (Status)values.GetValue(random.Next(values.Length));
         }
 
-        private TimeSpan Search(int randomMin, int randomMax)
+        private async Task<TimeSpan> Search(int randomMin, int randomMax)
         {
             Random random = new Random();
             var result = TimeSpan.FromMilliseconds(random.Next(randomMin, randomMax));
+            await Task.Delay(result);
             return result;
         }
     }
